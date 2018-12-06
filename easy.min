@@ -1,0 +1,14 @@
+function main;
+beginparams
+endparams
+beginlocals
+    n, m : integer;
+    t : array [20] of integer;
+endlocals
+beginbody
+    read n;
+    m := 7 + n;
+    t[0] := 11 + m;
+    write n;
+    write m;
+endbody

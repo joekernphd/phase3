@@ -1,0 +1,418 @@
+/*Phase 2
+Joseph Kern
+861177882
+October 29, 2018 */
+%{
+ #include "header.h"
+
+ struct Element {
+    string name;    //variable name
+    int size;       //size if array, 0 if scalar
+    string localTo; //which function is this variable local to
+
+    Element(string n, int s) {
+        name = n;
+        size = s;
+        localTo = "";
+    }
+ };
+
+ int tempCount = 0;
+ string makeTemp() {
+    string ret = "__temp";
+    ret += to_string(tempCount);
+    tempCount++;
+    return ret;
+ }
+
+ int labelCount = 0;
+ string makeLabel() {
+    string ret = "LABEL";
+    ret += to_string(labelCount);
+    labelCount++;
+    return ret;
+ }
+
+ void yyerror(const char *msg);
+ extern int currLine;
+ extern int currPos;
+ int yylex();
+ string code = "";
+ vector<pair <string, string>> functions;   //function name, code for function
+ unordered_map<string, Element> symbolTable;
+ vector<Node*> nodes;
+ bool error = false;
+%}
+%union{
+  char* strval;
+  Node* nodeval;
+};
+
+%start Program
+
+/* Non Terminals
+%type   Function
+%type   Comp
+*/
+%type <nodeval> Expression
+%type <nodeval> ExpressionSeq
+%type <nodeval> ExpressionSeq1
+%type <nodeval> Bool-Expr
+%type <nodeval> Declaration
+%type <nodeval> DeclarationSeq
+%type <nodeval> Statement
+%type <nodeval> ReadStmt
+%type <nodeval> WriteStmt
+%type <nodeval> StatementSeq
+/*In order of increaseing precedence terminal symbols*/
+%token  FUNCTION BEGIN_PARAMS END_PARAMS BEGIN_LOCALS END_LOCALS BEGIN_BODY END_BODY INTEGER ARRAY OF IF THEN ENDIF ELSE WHILE DO BEGINLOOP ENDLOOP CONTINUE READ WRITE TRUE FALSE RETURN <strval>IDENT <strval>NUMBER SEMICOLON COLON COMMA
+%right  ASSIGN
+%left   OR
+%left   AND
+%right  NOT
+%left   NEQ EQ LT GT LTE GTE
+%left   ADD SUB
+%left   MULT DIV MOD
+%right  UMINUS
+%left   L_SQUARE_BRACKET R_SQUARE_BRACKET
+%left   L_PAREN R_PAREN
+
+%% 
+Program:    /*empty*/                       {/*printf("Program -> epsilon\n");*/}
+            | Program Function              {/*printf("Program -> Program Function\n");*/}
+            ;
+
+Function:   FUNCTION IDENT SEMICOLON BEGIN_PARAMS DeclarationSeq END_PARAMS BEGIN_LOCALS DeclarationSeq END_LOCALS BEGIN_BODY StatementSeq END_BODY
+                {/*printf("Function -> FUNCTION IDENT %s SEMICOLON BEGIN_PARAMS DeclarationSeq END_PARAMS BEGIN_LOCALS DeclarationSeq END_LOCALS BEGIN_BODY StatementSeq END_BODY\n", $2);*/
+                    code = "func " + string($2) + "\n";
+                    if($5 != NULL)
+                        code = code + $5->code;
+                    if($8 != NULL)
+                        code = code + $8->code;
+                    code = code + $11->code;
+                    code = code + "endfunc\n";
+                    for(auto& i : symbolTable) {
+                        if(i.second.localTo == "") {
+                            i.second.localTo = string($2);
+                            
+                        }
+                    }
+                    functions.push_back(make_pair(string($2), code));
+                    code = "";
+                }
+            ;
+
+DeclarationSeq: /*empty*/                               {/*printf("DeclarationSeq -> epsilon\n");*/}
+                | DeclarationSeq Declaration SEMICOLON  {/*printf("DeclarationSeq -> DeclarationSeq Declaration SEMICOLON\n");*/
+                                                            Node* temp = new Node();
+                                                            nodes.push_back(temp);
+                                                            $$ = temp;
+                                                            if($1 != NULL)
+                                                                $$->code = $1->code + $2->code;
+                                                            else
+                                                                $$->code = $2->code;
+                                                        }
+                ;
+
+StatementSeq:   Statement SEMICOLON                 {/*printf("StatementSeq -> Statement SEMICOLON\n");*/
+                                                        Node* temp = new Node();
+                                                        nodes.push_back(temp);
+                                                        $$ = temp;
+                                                        $$->code = $1->code;
+                                                    }
+                | StatementSeq Statement SEMICOLON  {/*printf("StatementSeq -> StatementSeq Statement SEMICOLON\n");*/
+                                                        Node* temp = new Node();
+                                                        nodes.push_back(temp);
+                                                        $$ = temp;
+                                                        $$->code = $1->code + $2->code;
+                                                    }
+                ;
+
+Declaration:    IDENT COLON INTEGER         {/*printf("ScalarDeclaration -> IDENT COLON INTEGER\n");*/
+                                                        Element temp(string($1), 0);
+                                                        symbolTable.insert(make_pair(string($1), temp));
+                                                        Node* tempnode = new Node();
+                                                        nodes.push_back(tempnode);
+                                                        $$ = tempnode;
+                                                        $$->code = ". " + string($1) + "\n";
+                                            }
+                | IDENT COMMA Declaration   {/*printf("ScalarDeclaration -> IDENT COMMA ScalarDeclaration\n");*/
+                                                        Element temp(string($1), 0);
+                                                        symbolTable.insert(make_pair(string($1), temp));
+                                                        Node* tempnode = new Node();
+                                                        nodes.push_back(tempnode);
+                                                        $$ = tempnode;
+                                                        $$->code = ". " + string($1) + "\n";
+                                                        $$->code += $3->code;
+                                            }
+                | IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER     {/*printf("VectorDeclaration -> IDENT COLON ARRAY LEFT_BRACKET NUMBER RIGHT_BRACKET OF INTEGER\n");*/
+                                                                                                    Element temp(string($1), stoi($5));
+                                                                                                    symbolTable.insert(make_pair(string($1), temp));
+                                                                                                    Node* tempnode = new Node();
+                                                                                                    nodes.push_back(tempnode);
+                                                                                                    $$ = tempnode;
+                                                                                                    $$->code = ".[] " + string($1) + ", " + string($5) + "\n";
+                                                                                            }
+                /*| IDENT COMMA VectorDeclaration     {printf("VectorDeclaration -> IDENT COMMA VectorDeclaration\n");}*/
+                ;
+
+Statement:      IDENT ASSIGN Expression                             {/*printf("Statement -> Var ASSIGN Expression\n");*/
+                                                                        Node* temp = new Node();
+                                                                        nodes.push_back(temp);
+                                                                        $$ = temp;
+                                                                        $$-> code = $3->code;
+                                                                        $$->code += "= " + string($1) + ", " + $3->value + "\n";
+                                                                    }
+                | IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Expression      {/*printf("Statement -> Var ASSIGN Expression\n");*/
+                                                                                                Node* temp = new Node();
+                                                                                                nodes.push_back(temp);
+                                                                                                $$ = temp;
+                                                                                                $$->code = $3->code;
+                                                                                                $$->code += $6->code;
+                                                                                                $$->code += "[]= " + string($1) + ", " + $3->value + ", " + $6->value + "\n";
+                                                                                            }
+                | IF Bool-Expr THEN StatementSeq ENDIF              {/*printf("Statement -> IF Bool-Expr THEN StatementSeq ENDIF\n");*/
+                                                                        Node* temp = new Node();
+                                                                        nodes.push_back(temp);
+                                                                        $$ = temp;
+                                                                        /*string truelabel = makeLabel();
+                                                                        string falselabel = makeLabel();
+                                                                        string mycode = "?:= " + truelabel + ", " + $2->value + "\n";
+                                                                        mycode = ":= " + falselabel + "\n";
+                                                                        mycode += ": " + truelabel + "\n";
+                                                                        mycode += $4->code;
+                                                                        mycode += ": " + falselabel + "\n";
+                                                                        $$->code = mycode;*/
+                                                                    }
+                | IF Bool-Expr THEN StatementSeq ELSE StatementSeq ENDIF        {/*printf("Statement -> IF Bool-Expr THEN StatementSeq ELSE StatementSeq ENDIF\n");*/
+                                                                                    Node* temp = new Node();
+                                                                                    nodes.push_back(temp);
+                                                                                    $$ = temp;
+                                                                                    string mylabel = makeLabel();
+                                                                                    
+                                                                                }
+                | WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP    {/*printf("Statement -> WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP\n");*/}
+                | DO BEGINLOOP StatementSeq ENDLOOP WHILE Bool-Expr {/*printf("Statement -> DO BEGINLOOP StatementSeq ENDLOOP WHILE Bool-Expr\n");*/}
+                | ReadStmt                                          {/*printf("Statement -> ReadStmt\n");*/}
+                | WriteStmt                                         {/*printf("Statement -> WriteStmt\n");*/}
+                | CONTINUE                                          {/*printf("Statement -> CONTINUE\n");*/}
+                | RETURN Expression                                 {/*printf("Statement -> RETURN Expression\n");*/}
+                ;
+
+ReadStmt:       READ IDENT                                                      {/*printf("ReadStmt -> READ IDENT\n");*/
+                                                                                    Node* temp = new Node();
+                                                                                    nodes.push_back(temp);
+                                                                                    $$ = temp;
+                                                                                    $$->code = ".< " + string($2) + "\n";
+                                                                                    /*unordered_map<string,Element>::const_iterator got = symbolTable.find(string($2));
+                                                                                    if(got == symbolTable.end()) {
+                                                                                        error = true;
+                                                                                        cout << "ERROR: variable " + string($2) + " used but not declared.\n";
+                                                                                    } else {
+                                                                                        got->second.value = 
+                                                                                    }*/
+                                                                                }
+                | READ IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET       {/*printf("ReadStmt -> READ IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
+                                                                                    Node* temp = new Node();
+                                                                                    nodes.push_back(temp);
+                                                                                    $$ = temp;
+                                                                                    $$->code = ".[]< " + string($2) + ", " + $4->value + "\n";
+                                                                                }
+                | ReadStmt COMMA IDENT                                          {/*printf("ReadStmt -> ReadStmt COMMA IDENT\n");*/
+                                                                                    Node* temp = new Node();
+                                                                                    nodes.push_back(temp);
+                                                                                    $$ = temp;
+                                                                                    $$->code = ".< " + string($3) + "\n";
+                                                                                }
+                | ReadStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {/*printf("ReadStmt -> ReadStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
+                                                                                        Node* temp = new Node();
+                                                                                        nodes.push_back(temp);
+                                                                                        $$ = temp;
+                                                                                        $$->code = ".[]< " + string($3) + ", " + $5->value + "\n";
+                                                                                    }
+                ;
+
+WriteStmt:      WRITE IDENT                                                     {/*printf("WriteStmt -> WRITE IDENT\n");*/
+                                                                                    Node* temp = new Node();
+                                                                                    nodes.push_back(temp);
+                                                                                    $$ = temp; 
+                                                                                    $$->code = ".> " + string($2) + "\n";
+                                                                                }
+                | WRITE IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET      {/*printf("WriteStmt -> WRITE IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
+                                                                                    Node* temp = new Node();
+                                                                                    nodes.push_back(temp);
+                                                                                    $$ = temp;  
+                                                                                    $$->code = ".[]> " + string($2) + ", " + $4->value + "\n";
+                                                                                }
+                | WriteStmt COMMA IDENT                                         {/*printf("WriteStmt -> WriteStmt COMMA IDENT\n");*/
+                                                                                    Node* temp = new Node();
+                                                                                    nodes.push_back(temp);
+                                                                                    $$ = temp;  
+                                                                                    $$->code = ".> " + string($3) + "\n";
+                                                                                }
+                | WriteStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET    {/*printf("WriteStmt -> WriteStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
+                                                                                            Node* temp = new Node();
+                                                                                            nodes.push_back(temp);
+                                                                                            $$ = temp;  
+                                                                                            $$->code = ".[]> " + string($3) + ", " + $5->value + "\n";
+                                                                                        }
+                ;
+
+/*
+IdentifierSeq:  IDENT                           {printf("IdentifierSeq -> IDENT %s\n", $1);}
+                | IdentifierSeq COMMA IDENT     {printf("IdentifierSeq -> IdentiferSeq COMMA IDENT %s\n", $3);}
+                ;
+
+VarSeq:         Var                 {printf("VarSeq -> Var\n");}
+                | VarSeq COMMA Var  {printf("VarSeq -> VarSeq COMMA Var\n");}
+                ;
+
+Var:            IDENT                                               {printf("Var -> IDENT %s\n", $1);}
+                | IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {printf("Var -> IDENT %s L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n", $1);}
+                ;
+*/
+
+Expression:      Expression ADD Expression      {/*printf("Expression -> Expression ADD Expr\n");*/
+                                                    Node* temp = new Node();
+                                                    nodes.push_back(temp);
+                                                    $$ = temp;
+                                                    string mytemp = makeTemp();
+                                                    $$->code = ". " + mytemp + "\n";
+                                                    $$->code += "+ " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    $$->value = mytemp;
+                                                } 
+                | Expression SUB Expression     {/*printf("Expression -> Expression SUB Expr\n");*/
+                                                    Node* temp = new Node();
+                                                    nodes.push_back(temp);
+                                                    $$ = temp;
+                                                    string mytemp = makeTemp();
+                                                    $$->code = ". " + mytemp + "\n";
+                                                    $$->code += "- " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    $$->value = mytemp;
+                                                }
+                | Expression MULT Expression    {/*printf("Expr -> Expr MULT Term\n");*/
+                                                    Node* temp = new Node();
+                                                    nodes.push_back(temp);
+                                                    $$ = temp;
+                                                    string mytemp = makeTemp();
+                                                    $$->code = ". " + mytemp + "\n";
+                                                    $$->code += "* " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    $$->value = mytemp;
+                                                }
+                | Expression DIV Expression     {/*printf("Expr -> Expr DIV Term\n");*/
+                                                    Node* temp = new Node();
+                                                    nodes.push_back(temp);
+                                                    $$ = temp;
+                                                    string mytemp = makeTemp();
+                                                    $$->code = ". " + mytemp + "\n";
+                                                    $$->code += "/ " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    $$->value = mytemp; 
+                                                }
+                | Expression MOD Expression     {/*printf("Expr -> Expr MOD Term\n");*/
+                                                    Node* temp = new Node();
+                                                    nodes.push_back(temp);
+                                                    $$ = temp;
+                                                    string mytemp = makeTemp();
+                                                    $$->code = $$->code + ". " + mytemp + "\n";
+                                                    $$->code += $$->code + "% " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    $$->value = mytemp; 
+                                                }
+                | IDENT L_PAREN ExpressionSeq R_PAREN     {/*printf("Term -> IDENT %s L_PAREN ExpressionSeq R_PAREN\n", $1);*/}
+                | IDENT                                 {/*printf("Term -> Var\n");*/
+                                                            Node* temp = new Node();
+                                                            nodes.push_back(temp);
+                                                            $$ = temp;
+                                                            $$->value = string($1);
+                                                        }
+                | IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET    {/*printf("Term -> Var\n");*/}
+                | NUMBER                                {/*printf("Term -> NUMBER %s\n", $1);*/
+                                                            Node* temp = new Node();
+                                                            nodes.push_back(temp);
+                                                            $$ = temp;
+                                                            $$->value = string($1);
+                                                        }
+                | L_PAREN Expression R_PAREN            {/*printf("Term -> L_PAREN Expression R_PAREN\n");*/}
+                | SUB Expression %prec UMINUS                 {/*printf("Term -> UMINUS Term\n");*/}
+                ;
+
+ExpressionSeq:  /*empty*/           {/*printf("ExpressionSeq -> epsilon\n");*/}
+                | ExpressionSeq1    {/*printf("ExpressionSeq -> ExpressionSeq1\n");*/
+                                        Node* temp = new Node();
+                                        nodes.push_back(temp);
+                                        $$ = temp;
+                                        $$->code = $1->code;
+                                    }
+                ;
+
+ExpressionSeq1: Expression                          {/*printf("ExpressionSeq1 -> Expression\n");*/
+                                                        Node* temp = new Node();
+                                                        nodes.push_back(temp);
+                                                        $$ = temp;
+                                                        $$->code = $1->code;
+                                                    }
+                | ExpressionSeq1 COMMA Expression   {/*printf("ExpressionSeq1 -> ExpressionSeq1 COMMA Expression\n");*/
+                                                        Node* temp = new Node();
+                                                        nodes.push_back(temp);
+                                                        $$ = temp;
+                                                        $$->code = $1->code + $3->code;
+                                                    }
+                ;
+
+Bool-Expr:      Bool-Expr OR Bool-Expr    {/*printf("Bool-Expr -> Bool-Expr OR Relation-And-Expr\n");*/}
+                | Bool-Expr AND Bool-Expr   {/*printf("Relation-And-Expr -> Relation-And-Expr AND Relation-Expr\n");*/}
+                | Expression Comp Expression      {/*printf("Relation-Expr -> Expression Comp Expression\n");*/}
+                | TRUE                          {/*printf("Relation-Expr -> TRUE\n");*/
+                                                    Node* temp = new Node();
+                                                    nodes.push_back(temp);
+                                                    $$ = temp;
+                                                    $$->value = "1";
+                                                }
+                | FALSE                         {/*printf("Relation-Expr -> FALSE\n");*/
+                                                    Node* temp = new Node();
+                                                    nodes.push_back(temp);
+                                                    $$ = temp;
+                                                    $$-> value = "0";
+                                                }
+                | L_PAREN Bool-Expr R_PAREN     {/*printf("Relation-Expr -> L_PAREN Bool-Expr R_PAREN\n");*/}
+                | NOT Bool-Expr             {/*printf("Relation-Expr -> NOT Relation-Expr\n");*/}
+                ;
+
+Comp:           EQ      {/*printf("Comp -> EQ\n");*/}
+                | NEQ   {/*printf("Comp -> NEQ\n");*/}
+                | LT    {/*printf("Comp -> LT\n");*/}
+                | GT    {/*printf("Comp -> GT\n");*/}
+                | LTE   {/*printf("Comp -> LTE\n");*/}
+                | GTE   {/*printf("Comp -> GTE\n");*/}
+                ;
+
+%%
+
+int main( int argc, char* argv[] ) {  
+    // Allow for command-line specification of source file
+    if ( argc > 1  &&  freopen( argv[1], "r", stdin) == NULL ) {
+        cout << argv[0] << ": file " << argv[1]; 
+        cout << " cannot be opened.\n";
+        exit( 1 );
+    }
+    string compilerName;
+    compilerName = argv[0];           // For use in error messages
+    yyparse();                                // build syntax tree
+    for(auto i : symbolTable) {
+        cout << "var:" << i.first << " size:" << i.second.size << " localto:" <<i.second.localTo << endl;
+    }
+    if(!error) {
+        for(auto s : functions) {
+            // cout << "function: " << s.first << endl;
+            cout << s.second;
+        }
+    }
+    for(Node* n : nodes) {
+        delete n;
+    }
+    //string xxx = makeTemp();
+}
+
+
+void yyerror(const char *msg) {
+   printf("** Line %d, position %d: %s\n", currLine, currPos, msg);
+}
