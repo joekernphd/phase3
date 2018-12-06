@@ -7,12 +7,16 @@
  #include <vector>
  using namespace std;
  struct Node {
-    string code;
-    string value;
-
-    Node() {
-        code = "";
-        value = "";
+    string* code;
+    string* value;
+    
+    ~Node() {
+        if(code != NULL) {
+                delete code;
+        }
+        if(value != NULL) {
+                delete value;
+        }
     }
  };
 

@@ -8,7 +8,10 @@ endlocals
 beginbody
     read n;
     m := 7 + n;
-    t[0] := 11 + m;
+    t[0] := 11 + m + 5;
     write n;
     write m;
+    if true then
+        write n;
+    endif;
 endbody

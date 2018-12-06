@@ -32,6 +32,7 @@ October 29, 2018 */
     labelCount++;
     return ret;
  }
+
  void yyerror(const char *msg);
  extern int currLine;
  extern int currPos;
@@ -85,10 +86,10 @@ Function:   FUNCTION IDENT SEMICOLON BEGIN_PARAMS DeclarationSeq END_PARAMS BEGI
                 {/*printf("Function -> FUNCTION IDENT %s SEMICOLON BEGIN_PARAMS DeclarationSeq END_PARAMS BEGIN_LOCALS DeclarationSeq END_LOCALS BEGIN_BODY StatementSeq END_BODY\n", $2);*/
                     code = "func " + string($2) + "\n";
                     if($5 != NULL)
-                        code = code + $5->code;
+                        code = code + *($5->code);
                     if($8 != NULL)
-                        code = code + $8->code;
-                    code = code + $11->code;
+                        code = code + *($8->code);
+                    code = code + *($11->code);
                     code = code + "endfunc\n";
                     for(auto& i : symbolTable) {
                         if(i.second.localTo == "") {
@@ -107,9 +108,9 @@ DeclarationSeq: /*empty*/                               {/*printf("DeclarationSe
                                                             nodes.push_back(temp);
                                                             $$ = temp;
                                                             if($1 != NULL)
-                                                                $$->code = $1->code + $2->code;
+                                                                $$->code = new string(*($1->code) + *($2->code));
                                                             else
-                                                                $$->code = $2->code;
+                                                                $$->code = new string(*($2->code));
                                                         }
                 ;
 
@@ -117,13 +118,13 @@ StatementSeq:   Statement SEMICOLON                 {/*printf("StatementSeq -> S
                                                         Node* temp = new Node();
                                                         nodes.push_back(temp);
                                                         $$ = temp;
-                                                        $$->code = $1->code;
+                                                        $$->code = new string(*($1->code));
                                                     }
                 | StatementSeq Statement SEMICOLON  {/*printf("StatementSeq -> StatementSeq Statement SEMICOLON\n");*/
                                                         Node* temp = new Node();
                                                         nodes.push_back(temp);
                                                         $$ = temp;
-                                                        $$->code = $1->code + $2->code;
+                                                        $$->code = new string(*($1->code) + *($2->code));
                                                     }
                 ;
 
@@ -133,7 +134,7 @@ Declaration:    IDENT COLON INTEGER         {/*printf("ScalarDeclaration -> IDEN
                                                         Node* tempnode = new Node();
                                                         nodes.push_back(tempnode);
                                                         $$ = tempnode;
-                                                        $$->code = ". " + string($1) + "\n";
+                                                        $$->code = new string(". " + string($1) + "\n");
                                             }
                 | IDENT COMMA Declaration   {/*printf("ScalarDeclaration -> IDENT COMMA ScalarDeclaration\n");*/
                                                         Element temp(string($1), 0);
@@ -141,8 +142,8 @@ Declaration:    IDENT COLON INTEGER         {/*printf("ScalarDeclaration -> IDEN
                                                         Node* tempnode = new Node();
                                                         nodes.push_back(tempnode);
                                                         $$ = tempnode;
-                                                        $$->code = ". " + string($1) + "\n";
-                                                        $$->code += $3->code;
+                                                        $$->code = new string(". " + string($1) + "\n");
+                                                        *($$->code) += *($3->code);
                                             }
                 | IDENT COLON ARRAY L_SQUARE_BRACKET NUMBER R_SQUARE_BRACKET OF INTEGER     {/*printf("VectorDeclaration -> IDENT COLON ARRAY LEFT_BRACKET NUMBER RIGHT_BRACKET OF INTEGER\n");*/
                                                                                                     Element temp(string($1), stoi($5));
@@ -150,7 +151,7 @@ Declaration:    IDENT COLON INTEGER         {/*printf("ScalarDeclaration -> IDEN
                                                                                                     Node* tempnode = new Node();
                                                                                                     nodes.push_back(tempnode);
                                                                                                     $$ = tempnode;
-                                                                                                    $$->code = ".[] " + string($1) + ", " + string($5) + "\n";
+                                                                                                    $$->code = new string(".[] " + string($1) + ", " + string($5) + "\n");
                                                                                             }
                 /*| IDENT COMMA VectorDeclaration     {printf("VectorDeclaration -> IDENT COMMA VectorDeclaration\n");}*/
                 ;
@@ -159,16 +160,16 @@ Statement:      IDENT ASSIGN Expression                             {/*printf("S
                                                                         Node* temp = new Node();
                                                                         nodes.push_back(temp);
                                                                         $$ = temp;
-                                                                        $$-> code = $3->code;
-                                                                        $$->code += "= " + string($1) + ", " + $3->value + "\n";
+                                                                        $$-> code = new string(*($3->code));
+                                                                        *($$->code) += "= " + string($1) + ", " + *($3->value) + "\n";
                                                                     }
                 | IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET ASSIGN Expression      {/*printf("Statement -> Var ASSIGN Expression\n");*/
                                                                                                 Node* temp = new Node();
                                                                                                 nodes.push_back(temp);
                                                                                                 $$ = temp;
-                                                                                                $$->code = $3->code;
-                                                                                                $$->code += $6->code;
-                                                                                                $$->code += "[]= " + string($1) + ", " + $3->value + ", " + $6->value + "\n";
+                                                                                                $$->code = new string(*($3->code));
+                                                                                                *($$->code) += *($6->code);
+                                                                                                *($$->code) += "[]= " + string($1) + ", " + *($3->value) + ", " + *($6->value) + "\n";
                                                                                             }
                 | IF Bool-Expr THEN StatementSeq ENDIF              {/*printf("Statement -> IF Bool-Expr THEN StatementSeq ENDIF\n");*/
                                                                         Node* temp = new Node();
@@ -176,18 +177,19 @@ Statement:      IDENT ASSIGN Expression                             {/*printf("S
                                                                         $$ = temp;
                                                                         string truelabel = makeLabel();
                                                                         string falselabel = makeLabel();
-                                                                        /*string mycode = "?:= " + truelabel + ", " + $2->value + "\n";
-                                                                        mycode = ":= " + falselabel + "\n";
+                                                                        string mycode = "?:= " + truelabel + ", " + *($2->value) + "\n";
+                                                                        mycode += ":= " + falselabel + "\n";
                                                                         mycode += ": " + truelabel + "\n";
-                                                                        mycode += $4->code;
+                                                                        mycode += *($4->code);
                                                                         mycode += ": " + falselabel + "\n";
-                                                                        $$->code = mycode;*/
+                                                                        $$->code = new string(mycode);
                                                                     }
                 | IF Bool-Expr THEN StatementSeq ELSE StatementSeq ENDIF        {/*printf("Statement -> IF Bool-Expr THEN StatementSeq ELSE StatementSeq ENDIF\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     $$ = temp;
                                                                                     string mylabel = makeLabel();
+                                                                                    
                                                                                 }
                 | WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP    {/*printf("Statement -> WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP\n");*/}
                 | DO BEGINLOOP StatementSeq ENDLOOP WHILE Bool-Expr {/*printf("Statement -> DO BEGINLOOP StatementSeq ENDLOOP WHILE Bool-Expr\n");*/}
@@ -201,7 +203,7 @@ ReadStmt:       READ IDENT                                                      
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     $$ = temp;
-                                                                                    $$->code = ".< " + string($2) + "\n";
+                                                                                    $$->code = new string(".< " + string($2) + "\n");
                                                                                     /*unordered_map<string,Element>::const_iterator got = symbolTable.find(string($2));
                                                                                     if(got == symbolTable.end()) {
                                                                                         error = true;
@@ -214,19 +216,19 @@ ReadStmt:       READ IDENT                                                      
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     $$ = temp;
-                                                                                    $$->code = ".[]< " + string($2) + ", " + $4->value + "\n";
+                                                                                    $$->code = new string(".[]< " + string($2) + ", " + *($4->value) + "\n");
                                                                                 }
                 | ReadStmt COMMA IDENT                                          {/*printf("ReadStmt -> ReadStmt COMMA IDENT\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     $$ = temp;
-                                                                                    $$->code = ".< " + string($3) + "\n";
+                                                                                    $$->code = new string(".< " + string($3) + "\n");
                                                                                 }
                 | ReadStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET {/*printf("ReadStmt -> ReadStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
                                                                                         Node* temp = new Node();
                                                                                         nodes.push_back(temp);
                                                                                         $$ = temp;
-                                                                                        $$->code = ".[]< " + string($3) + ", " + $5->value + "\n";
+                                                                                        $$->code = new string(".[]< " + string($3) + ", " + *($5->value) + "\n");
                                                                                     }
                 ;
 
@@ -234,25 +236,25 @@ WriteStmt:      WRITE IDENT                                                     
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     $$ = temp; 
-                                                                                    $$->code = ".> " + string($2) + "\n";
+                                                                                    $$->code = new string(".> " + string($2) + "\n");
                                                                                 }
                 | WRITE IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET      {/*printf("WriteStmt -> WRITE IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     $$ = temp;  
-                                                                                    $$->code = ".[]> " + string($2) + ", " + $4->value + "\n";
+                                                                                    $$->code = new string(".[]> " + string($2) + ", " + *($4->value) + "\n");
                                                                                 }
                 | WriteStmt COMMA IDENT                                         {/*printf("WriteStmt -> WriteStmt COMMA IDENT\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     $$ = temp;  
-                                                                                    $$->code = ".> " + string($3) + "\n";
+                                                                                    $$->code = new string(".> " + string($3) + "\n");
                                                                                 }
                 | WriteStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET    {/*printf("WriteStmt -> WriteStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
                                                                                             Node* temp = new Node();
                                                                                             nodes.push_back(temp);
                                                                                             $$ = temp;  
-                                                                                            $$->code = ".[]> " + string($3) + ", " + $5->value + "\n";
+                                                                                            $$->code = new string(".[]> " + string($3) + ", " + *($5->value) + "\n");
                                                                                         }
                 ;
 
@@ -274,45 +276,46 @@ Expression:      Expression ADD Expression      {/*printf("Expression -> Express
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     $$ = temp;
-                                                    string mytemp = makeTemp();
-                                                    $$->code = ". " + mytemp + "\n";
-                                                    $$->code += "+ " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    $$->code = new string(*($1->code) + *($3->code));
+                                                    *($$->code) += ". " + *mytemp + "\n";
+                                                    *($$->code) += "+ " + *mytemp + ", " + *($1->value) + ", " + *($3->value) + "\n";
                                                     $$->value = mytemp;
                                                 } 
                 | Expression SUB Expression     {/*printf("Expression -> Expression SUB Expr\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     $$ = temp;
-                                                    string mytemp = makeTemp();
-                                                    $$->code = ". " + mytemp + "\n";
-                                                    $$->code += "- " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    $$->code = new string(". " + *mytemp + "\n");
+                                                    *($$->code) += "- " + *mytemp + ", " + *($1->value) + ", " + *($3->value) + "\n";
                                                     $$->value = mytemp;
                                                 }
                 | Expression MULT Expression    {/*printf("Expr -> Expr MULT Term\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     $$ = temp;
-                                                    string mytemp = makeTemp();
-                                                    $$->code = ". " + mytemp + "\n";
-                                                    $$->code += "* " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    $$->code = new string(". " + *mytemp + "\n");
+                                                    *($$->code) += "* " + *mytemp + ", " + *($1->value) + ", " + *($3->value) + "\n";
                                                     $$->value = mytemp;
                                                 }
                 | Expression DIV Expression     {/*printf("Expr -> Expr DIV Term\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     $$ = temp;
-                                                    string mytemp = makeTemp();
-                                                    $$->code = ". " + mytemp + "\n";
-                                                    $$->code += "/ " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    $$->code = new string(". " + *mytemp + "\n");
+                                                    *($$->code) += "/ " + *mytemp + ", " + *($1->value) + ", " + *($3->value) + "\n";
                                                     $$->value = mytemp; 
                                                 }
                 | Expression MOD Expression     {/*printf("Expr -> Expr MOD Term\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     $$ = temp;
-                                                    string mytemp = makeTemp();
-                                                    $$->code = $$->code + ". " + mytemp + "\n";
-                                                    $$->code += $$->code + "% " + mytemp + ", " + $1->value + ", " + $3->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    $$->code = new string(". " + *mytemp + "\n");
+                                                    *($$->code) += "% " + *mytemp + ", " + *($1->value) + ", " + *($3->value) + "\n";
                                                     $$->value = mytemp; 
                                                 }
                 | IDENT L_PAREN ExpressionSeq R_PAREN     {/*printf("Term -> IDENT %s L_PAREN ExpressionSeq R_PAREN\n", $1);*/}
@@ -320,14 +323,16 @@ Expression:      Expression ADD Expression      {/*printf("Expression -> Express
                                                             Node* temp = new Node();
                                                             nodes.push_back(temp);
                                                             $$ = temp;
-                                                            $$->value = string($1);
+                                                            $$->value = new string($1);
+                                                            $$->code = new string("");
                                                         }
                 | IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET    {/*printf("Term -> Var\n");*/}
                 | NUMBER                                {/*printf("Term -> NUMBER %s\n", $1);*/
                                                             Node* temp = new Node();
                                                             nodes.push_back(temp);
                                                             $$ = temp;
-                                                            $$->value = string($1);
+                                                            $$->value = new string($1);
+                                                            $$->code = new string("");
                                                         }
                 | L_PAREN Expression R_PAREN            {/*printf("Term -> L_PAREN Expression R_PAREN\n");*/}
                 | SUB Expression %prec UMINUS                 {/*printf("Term -> UMINUS Term\n");*/}
@@ -338,7 +343,7 @@ ExpressionSeq:  /*empty*/           {/*printf("ExpressionSeq -> epsilon\n");*/}
                                         Node* temp = new Node();
                                         nodes.push_back(temp);
                                         $$ = temp;
-                                        $$->code = $1->code;
+                                        $$->code = new string(*($1->code));
                                     }
                 ;
 
@@ -346,13 +351,13 @@ ExpressionSeq1: Expression                          {/*printf("ExpressionSeq1 ->
                                                         Node* temp = new Node();
                                                         nodes.push_back(temp);
                                                         $$ = temp;
-                                                        $$->code = $1->code;
+                                                        $$->code = new string(*($1->code));
                                                     }
                 | ExpressionSeq1 COMMA Expression   {/*printf("ExpressionSeq1 -> ExpressionSeq1 COMMA Expression\n");*/
                                                         Node* temp = new Node();
                                                         nodes.push_back(temp);
                                                         $$ = temp;
-                                                        $$->code = $1->code + $3->code;
+                                                        $$->code = new string(*($1->code) + *($3->code));
                                                     }
                 ;
 
@@ -363,13 +368,15 @@ Bool-Expr:      Bool-Expr OR Bool-Expr    {/*printf("Bool-Expr -> Bool-Expr OR R
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     $$ = temp;
-                                                    $$->value = "1";
+                                                    $$->value = new string("1");
+                                                    $$->code = new string("");
                                                 }
                 | FALSE                         {/*printf("Relation-Expr -> FALSE\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     $$ = temp;
-                                                    $$-> value = "0";
+                                                    $$-> value = new string("0");
+                                                    $$->code = new string("");
                                                 }
                 | L_PAREN Bool-Expr R_PAREN     {/*printf("Relation-Expr -> L_PAREN Bool-Expr R_PAREN\n");*/}
                 | NOT Bool-Expr             {/*printf("Relation-Expr -> NOT Relation-Expr\n");*/}
@@ -407,6 +414,7 @@ int main( int argc, char* argv[] ) {
     for(Node* n : nodes) {
         delete n;
     }
+    //string xxx = makeTemp();
 }
 
 

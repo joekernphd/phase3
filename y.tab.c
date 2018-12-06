@@ -93,6 +93,7 @@
     labelCount++;
     return ret;
  }
+
  void yyerror(const char *msg);
  extern int currLine;
  extern int currPos;
@@ -103,7 +104,7 @@
  vector<Node*> nodes;
  bool error = false;
 
-#line 107 "y.tab.c" /* yacc.c:339  */
+#line 108 "y.tab.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -195,12 +196,12 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 45 "minil.y" /* yacc.c:355  */
+#line 46 "minil.y" /* yacc.c:355  */
 
   char* strval;
   Node* nodeval;
 
-#line 204 "y.tab.c" /* yacc.c:355  */
+#line 205 "y.tab.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -217,7 +218,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 221 "y.tab.c" /* yacc.c:358  */
+#line 222 "y.tab.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -519,12 +520,12 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,    80,    80,    81,    84,   104,   105,   116,   122,   130,
-     138,   147,   158,   165,   173,   186,   192,   193,   194,   195,
-     196,   197,   200,   213,   219,   225,   233,   239,   245,   251,
-     273,   282,   291,   300,   309,   318,   319,   325,   326,   332,
-     333,   336,   337,   345,   351,   359,   360,   361,   362,   368,
-     374,   375,   378,   379,   380,   381,   382,   383
+       0,    81,    81,    82,    85,   105,   106,   117,   123,   131,
+     139,   148,   159,   166,   174,   187,   194,   195,   196,   197,
+     198,   199,   202,   215,   221,   227,   235,   241,   247,   253,
+     275,   285,   295,   304,   313,   322,   323,   330,   331,   338,
+     339,   342,   343,   351,   357,   365,   366,   367,   368,   375,
+     382,   383,   386,   387,   388,   389,   390,   391
 };
 #endif
 
@@ -1404,26 +1405,26 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 80 "minil.y" /* yacc.c:1646  */
+#line 81 "minil.y" /* yacc.c:1646  */
     {/*printf("Program -> epsilon\n");*/}
-#line 1410 "y.tab.c" /* yacc.c:1646  */
+#line 1411 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 3:
-#line 81 "minil.y" /* yacc.c:1646  */
+#line 82 "minil.y" /* yacc.c:1646  */
     {/*printf("Program -> Program Function\n");*/}
-#line 1416 "y.tab.c" /* yacc.c:1646  */
+#line 1417 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 4:
-#line 85 "minil.y" /* yacc.c:1646  */
+#line 86 "minil.y" /* yacc.c:1646  */
     {/*printf("Function -> FUNCTION IDENT %s SEMICOLON BEGIN_PARAMS DeclarationSeq END_PARAMS BEGIN_LOCALS DeclarationSeq END_LOCALS BEGIN_BODY StatementSeq END_BODY\n", $2);*/
                     code = "func " + string((yyvsp[-10].strval)) + "\n";
                     if((yyvsp[-7].nodeval) != NULL)
-                        code = code + (yyvsp[-7].nodeval)->code;
+                        code = code + *((yyvsp[-7].nodeval)->code);
                     if((yyvsp[-4].nodeval) != NULL)
-                        code = code + (yyvsp[-4].nodeval)->code;
-                    code = code + (yyvsp[-1].nodeval)->code;
+                        code = code + *((yyvsp[-4].nodeval)->code);
+                    code = code + *((yyvsp[-1].nodeval)->code);
                     code = code + "endfunc\n";
                     for(auto& i : symbolTable) {
                         if(i.second.localTo == "") {
@@ -1434,188 +1435,189 @@ yyreduce:
                     functions.push_back(make_pair(string((yyvsp[-10].strval)), code));
                     code = "";
                 }
-#line 1438 "y.tab.c" /* yacc.c:1646  */
+#line 1439 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 5:
-#line 104 "minil.y" /* yacc.c:1646  */
+#line 105 "minil.y" /* yacc.c:1646  */
     {/*printf("DeclarationSeq -> epsilon\n");*/}
-#line 1444 "y.tab.c" /* yacc.c:1646  */
+#line 1445 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 6:
-#line 105 "minil.y" /* yacc.c:1646  */
+#line 106 "minil.y" /* yacc.c:1646  */
     {/*printf("DeclarationSeq -> DeclarationSeq Declaration SEMICOLON\n");*/
                                                             Node* temp = new Node();
                                                             nodes.push_back(temp);
                                                             (yyval.nodeval) = temp;
                                                             if((yyvsp[-2].nodeval) != NULL)
-                                                                (yyval.nodeval)->code = (yyvsp[-2].nodeval)->code + (yyvsp[-1].nodeval)->code;
+                                                                (yyval.nodeval)->code = new string(*((yyvsp[-2].nodeval)->code) + *((yyvsp[-1].nodeval)->code));
                                                             else
-                                                                (yyval.nodeval)->code = (yyvsp[-1].nodeval)->code;
+                                                                (yyval.nodeval)->code = new string(*((yyvsp[-1].nodeval)->code));
                                                         }
-#line 1458 "y.tab.c" /* yacc.c:1646  */
+#line 1459 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 7:
-#line 116 "minil.y" /* yacc.c:1646  */
+#line 117 "minil.y" /* yacc.c:1646  */
     {/*printf("StatementSeq -> Statement SEMICOLON\n");*/
                                                         Node* temp = new Node();
                                                         nodes.push_back(temp);
                                                         (yyval.nodeval) = temp;
-                                                        (yyval.nodeval)->code = (yyvsp[-1].nodeval)->code;
+                                                        (yyval.nodeval)->code = new string(*((yyvsp[-1].nodeval)->code));
                                                     }
-#line 1469 "y.tab.c" /* yacc.c:1646  */
+#line 1470 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 8:
-#line 122 "minil.y" /* yacc.c:1646  */
+#line 123 "minil.y" /* yacc.c:1646  */
     {/*printf("StatementSeq -> StatementSeq Statement SEMICOLON\n");*/
                                                         Node* temp = new Node();
                                                         nodes.push_back(temp);
                                                         (yyval.nodeval) = temp;
-                                                        (yyval.nodeval)->code = (yyvsp[-2].nodeval)->code + (yyvsp[-1].nodeval)->code;
+                                                        (yyval.nodeval)->code = new string(*((yyvsp[-2].nodeval)->code) + *((yyvsp[-1].nodeval)->code));
                                                     }
-#line 1480 "y.tab.c" /* yacc.c:1646  */
+#line 1481 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 9:
-#line 130 "minil.y" /* yacc.c:1646  */
+#line 131 "minil.y" /* yacc.c:1646  */
     {/*printf("ScalarDeclaration -> IDENT COLON INTEGER\n");*/
                                                         Element temp(string((yyvsp[-2].strval)), 0);
                                                         symbolTable.insert(make_pair(string((yyvsp[-2].strval)), temp));
                                                         Node* tempnode = new Node();
                                                         nodes.push_back(tempnode);
                                                         (yyval.nodeval) = tempnode;
-                                                        (yyval.nodeval)->code = ". " + string((yyvsp[-2].strval)) + "\n";
+                                                        (yyval.nodeval)->code = new string(". " + string((yyvsp[-2].strval)) + "\n");
                                             }
-#line 1493 "y.tab.c" /* yacc.c:1646  */
+#line 1494 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 10:
-#line 138 "minil.y" /* yacc.c:1646  */
+#line 139 "minil.y" /* yacc.c:1646  */
     {/*printf("ScalarDeclaration -> IDENT COMMA ScalarDeclaration\n");*/
                                                         Element temp(string((yyvsp[-2].strval)), 0);
                                                         symbolTable.insert(make_pair(string((yyvsp[-2].strval)), temp));
                                                         Node* tempnode = new Node();
                                                         nodes.push_back(tempnode);
                                                         (yyval.nodeval) = tempnode;
-                                                        (yyval.nodeval)->code = ". " + string((yyvsp[-2].strval)) + "\n";
-                                                        (yyval.nodeval)->code += (yyvsp[0].nodeval)->code;
+                                                        (yyval.nodeval)->code = new string(". " + string((yyvsp[-2].strval)) + "\n");
+                                                        *((yyval.nodeval)->code) += *((yyvsp[0].nodeval)->code);
                                             }
-#line 1507 "y.tab.c" /* yacc.c:1646  */
+#line 1508 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 11:
-#line 147 "minil.y" /* yacc.c:1646  */
+#line 148 "minil.y" /* yacc.c:1646  */
     {/*printf("VectorDeclaration -> IDENT COLON ARRAY LEFT_BRACKET NUMBER RIGHT_BRACKET OF INTEGER\n");*/
                                                                                                     Element temp(string((yyvsp[-7].strval)), stoi((yyvsp[-3].strval)));
                                                                                                     symbolTable.insert(make_pair(string((yyvsp[-7].strval)), temp));
                                                                                                     Node* tempnode = new Node();
                                                                                                     nodes.push_back(tempnode);
                                                                                                     (yyval.nodeval) = tempnode;
-                                                                                                    (yyval.nodeval)->code = ".[] " + string((yyvsp[-7].strval)) + ", " + string((yyvsp[-3].strval)) + "\n";
+                                                                                                    (yyval.nodeval)->code = new string(".[] " + string((yyvsp[-7].strval)) + ", " + string((yyvsp[-3].strval)) + "\n");
                                                                                             }
-#line 1520 "y.tab.c" /* yacc.c:1646  */
+#line 1521 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 12:
-#line 158 "minil.y" /* yacc.c:1646  */
+#line 159 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> Var ASSIGN Expression\n");*/
                                                                         Node* temp = new Node();
                                                                         nodes.push_back(temp);
                                                                         (yyval.nodeval) = temp;
-                                                                        (yyval.nodeval)-> code = (yyvsp[0].nodeval)->code;
-                                                                        (yyval.nodeval)->code += "= " + string((yyvsp[-2].strval)) + ", " + (yyvsp[0].nodeval)->value + "\n";
+                                                                        (yyval.nodeval)-> code = new string(*((yyvsp[0].nodeval)->code));
+                                                                        *((yyval.nodeval)->code) += "= " + string((yyvsp[-2].strval)) + ", " + *((yyvsp[0].nodeval)->value) + "\n";
                                                                     }
-#line 1532 "y.tab.c" /* yacc.c:1646  */
+#line 1533 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 13:
-#line 165 "minil.y" /* yacc.c:1646  */
+#line 166 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> Var ASSIGN Expression\n");*/
                                                                                                 Node* temp = new Node();
                                                                                                 nodes.push_back(temp);
                                                                                                 (yyval.nodeval) = temp;
-                                                                                                (yyval.nodeval)->code = (yyvsp[-3].nodeval)->code;
-                                                                                                (yyval.nodeval)->code += (yyvsp[0].nodeval)->code;
-                                                                                                (yyval.nodeval)->code += "[]= " + string((yyvsp[-5].strval)) + ", " + (yyvsp[-3].nodeval)->value + ", " + (yyvsp[0].nodeval)->value + "\n";
+                                                                                                (yyval.nodeval)->code = new string(*((yyvsp[-3].nodeval)->code));
+                                                                                                *((yyval.nodeval)->code) += *((yyvsp[0].nodeval)->code);
+                                                                                                *((yyval.nodeval)->code) += "[]= " + string((yyvsp[-5].strval)) + ", " + *((yyvsp[-3].nodeval)->value) + ", " + *((yyvsp[0].nodeval)->value) + "\n";
                                                                                             }
-#line 1545 "y.tab.c" /* yacc.c:1646  */
+#line 1546 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 14:
-#line 173 "minil.y" /* yacc.c:1646  */
+#line 174 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> IF Bool-Expr THEN StatementSeq ENDIF\n");*/
                                                                         Node* temp = new Node();
                                                                         nodes.push_back(temp);
                                                                         (yyval.nodeval) = temp;
                                                                         string truelabel = makeLabel();
                                                                         string falselabel = makeLabel();
-                                                                        /*string mycode = "?:= " + truelabel + ", " + $2->value + "\n";
-                                                                        mycode = ":= " + falselabel + "\n";
+                                                                        string mycode = "?:= " + truelabel + ", " + *((yyvsp[-3].nodeval)->value) + "\n";
+                                                                        mycode += ":= " + falselabel + "\n";
                                                                         mycode += ": " + truelabel + "\n";
-                                                                        mycode += $4->code;
+                                                                        mycode += *((yyvsp[-1].nodeval)->code);
                                                                         mycode += ": " + falselabel + "\n";
-                                                                        $$->code = mycode;*/
+                                                                        (yyval.nodeval)->code = new string(mycode);
                                                                     }
-#line 1563 "y.tab.c" /* yacc.c:1646  */
+#line 1564 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 186 "minil.y" /* yacc.c:1646  */
+#line 187 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> IF Bool-Expr THEN StatementSeq ELSE StatementSeq ENDIF\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     (yyval.nodeval) = temp;
                                                                                     string mylabel = makeLabel();
+                                                                                    
                                                                                 }
-#line 1574 "y.tab.c" /* yacc.c:1646  */
+#line 1576 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 192 "minil.y" /* yacc.c:1646  */
+#line 194 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP\n");*/}
-#line 1580 "y.tab.c" /* yacc.c:1646  */
+#line 1582 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 193 "minil.y" /* yacc.c:1646  */
+#line 195 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> DO BEGINLOOP StatementSeq ENDLOOP WHILE Bool-Expr\n");*/}
-#line 1586 "y.tab.c" /* yacc.c:1646  */
+#line 1588 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 194 "minil.y" /* yacc.c:1646  */
+#line 196 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> ReadStmt\n");*/}
-#line 1592 "y.tab.c" /* yacc.c:1646  */
+#line 1594 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 195 "minil.y" /* yacc.c:1646  */
+#line 197 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> WriteStmt\n");*/}
-#line 1598 "y.tab.c" /* yacc.c:1646  */
+#line 1600 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 196 "minil.y" /* yacc.c:1646  */
+#line 198 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> CONTINUE\n");*/}
-#line 1604 "y.tab.c" /* yacc.c:1646  */
+#line 1606 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 197 "minil.y" /* yacc.c:1646  */
+#line 199 "minil.y" /* yacc.c:1646  */
     {/*printf("Statement -> RETURN Expression\n");*/}
-#line 1610 "y.tab.c" /* yacc.c:1646  */
+#line 1612 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 200 "minil.y" /* yacc.c:1646  */
+#line 202 "minil.y" /* yacc.c:1646  */
     {/*printf("ReadStmt -> READ IDENT\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     (yyval.nodeval) = temp;
-                                                                                    (yyval.nodeval)->code = ".< " + string((yyvsp[0].strval)) + "\n";
+                                                                                    (yyval.nodeval)->code = new string(".< " + string((yyvsp[0].strval)) + "\n");
                                                                                     /*unordered_map<string,Element>::const_iterator got = symbolTable.find(string($2));
                                                                                     if(got == symbolTable.end()) {
                                                                                         error = true;
@@ -1624,331 +1626,337 @@ yyreduce:
                                                                                         got->second.value = 
                                                                                     }*/
                                                                                 }
-#line 1628 "y.tab.c" /* yacc.c:1646  */
+#line 1630 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 213 "minil.y" /* yacc.c:1646  */
+#line 215 "minil.y" /* yacc.c:1646  */
     {/*printf("ReadStmt -> READ IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     (yyval.nodeval) = temp;
-                                                                                    (yyval.nodeval)->code = ".[]< " + string((yyvsp[-3].strval)) + ", " + (yyvsp[-1].nodeval)->value + "\n";
+                                                                                    (yyval.nodeval)->code = new string(".[]< " + string((yyvsp[-3].strval)) + ", " + *((yyvsp[-1].nodeval)->value) + "\n");
                                                                                 }
-#line 1639 "y.tab.c" /* yacc.c:1646  */
+#line 1641 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 219 "minil.y" /* yacc.c:1646  */
+#line 221 "minil.y" /* yacc.c:1646  */
     {/*printf("ReadStmt -> ReadStmt COMMA IDENT\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     (yyval.nodeval) = temp;
-                                                                                    (yyval.nodeval)->code = ".< " + string((yyvsp[0].strval)) + "\n";
+                                                                                    (yyval.nodeval)->code = new string(".< " + string((yyvsp[0].strval)) + "\n");
                                                                                 }
-#line 1650 "y.tab.c" /* yacc.c:1646  */
+#line 1652 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 225 "minil.y" /* yacc.c:1646  */
+#line 227 "minil.y" /* yacc.c:1646  */
     {/*printf("ReadStmt -> ReadStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
                                                                                         Node* temp = new Node();
                                                                                         nodes.push_back(temp);
                                                                                         (yyval.nodeval) = temp;
-                                                                                        (yyval.nodeval)->code = ".[]< " + string((yyvsp[-3].strval)) + ", " + (yyvsp[-1].nodeval)->value + "\n";
+                                                                                        (yyval.nodeval)->code = new string(".[]< " + string((yyvsp[-3].strval)) + ", " + *((yyvsp[-1].nodeval)->value) + "\n");
                                                                                     }
-#line 1661 "y.tab.c" /* yacc.c:1646  */
+#line 1663 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 233 "minil.y" /* yacc.c:1646  */
+#line 235 "minil.y" /* yacc.c:1646  */
     {/*printf("WriteStmt -> WRITE IDENT\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     (yyval.nodeval) = temp; 
-                                                                                    (yyval.nodeval)->code = ".> " + string((yyvsp[0].strval)) + "\n";
+                                                                                    (yyval.nodeval)->code = new string(".> " + string((yyvsp[0].strval)) + "\n");
                                                                                 }
-#line 1672 "y.tab.c" /* yacc.c:1646  */
+#line 1674 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 239 "minil.y" /* yacc.c:1646  */
+#line 241 "minil.y" /* yacc.c:1646  */
     {/*printf("WriteStmt -> WRITE IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     (yyval.nodeval) = temp;  
-                                                                                    (yyval.nodeval)->code = ".[]> " + string((yyvsp[-3].strval)) + ", " + (yyvsp[-1].nodeval)->value + "\n";
+                                                                                    (yyval.nodeval)->code = new string(".[]> " + string((yyvsp[-3].strval)) + ", " + *((yyvsp[-1].nodeval)->value) + "\n");
                                                                                 }
-#line 1683 "y.tab.c" /* yacc.c:1646  */
+#line 1685 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 245 "minil.y" /* yacc.c:1646  */
+#line 247 "minil.y" /* yacc.c:1646  */
     {/*printf("WriteStmt -> WriteStmt COMMA IDENT\n");*/
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     (yyval.nodeval) = temp;  
-                                                                                    (yyval.nodeval)->code = ".> " + string((yyvsp[0].strval)) + "\n";
+                                                                                    (yyval.nodeval)->code = new string(".> " + string((yyvsp[0].strval)) + "\n");
                                                                                 }
-#line 1694 "y.tab.c" /* yacc.c:1646  */
+#line 1696 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 251 "minil.y" /* yacc.c:1646  */
+#line 253 "minil.y" /* yacc.c:1646  */
     {/*printf("WriteStmt -> WriteStmt COMMA IDENT L_SQUARE_BRACKET Expression R_SQUARE_BRACKET\n");*/
                                                                                             Node* temp = new Node();
                                                                                             nodes.push_back(temp);
                                                                                             (yyval.nodeval) = temp;  
-                                                                                            (yyval.nodeval)->code = ".[]> " + string((yyvsp[-3].strval)) + ", " + (yyvsp[-1].nodeval)->value + "\n";
+                                                                                            (yyval.nodeval)->code = new string(".[]> " + string((yyvsp[-3].strval)) + ", " + *((yyvsp[-1].nodeval)->value) + "\n");
                                                                                         }
-#line 1705 "y.tab.c" /* yacc.c:1646  */
+#line 1707 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 273 "minil.y" /* yacc.c:1646  */
+#line 275 "minil.y" /* yacc.c:1646  */
     {/*printf("Expression -> Expression ADD Expr\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     (yyval.nodeval) = temp;
-                                                    string mytemp = makeTemp();
-                                                    (yyval.nodeval)->code = ". " + mytemp + "\n";
-                                                    (yyval.nodeval)->code += "+ " + mytemp + ", " + (yyvsp[-2].nodeval)->value + ", " + (yyvsp[0].nodeval)->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    (yyval.nodeval)->code = new string(*((yyvsp[-2].nodeval)->code) + *((yyvsp[0].nodeval)->code));
+                                                    *((yyval.nodeval)->code) += ". " + *mytemp + "\n";
+                                                    *((yyval.nodeval)->code) += "+ " + *mytemp + ", " + *((yyvsp[-2].nodeval)->value) + ", " + *((yyvsp[0].nodeval)->value) + "\n";
                                                     (yyval.nodeval)->value = mytemp;
                                                 }
-#line 1719 "y.tab.c" /* yacc.c:1646  */
+#line 1722 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 282 "minil.y" /* yacc.c:1646  */
+#line 285 "minil.y" /* yacc.c:1646  */
     {/*printf("Expression -> Expression SUB Expr\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     (yyval.nodeval) = temp;
-                                                    string mytemp = makeTemp();
-                                                    (yyval.nodeval)->code = ". " + mytemp + "\n";
-                                                    (yyval.nodeval)->code += "- " + mytemp + ", " + (yyvsp[-2].nodeval)->value + ", " + (yyvsp[0].nodeval)->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    (yyval.nodeval)->code = new string(*((yyvsp[-2].nodeval)->code) + *((yyvsp[0].nodeval)->code));
+                                                    *((yyval.nodeval)->code) += ". " + *mytemp + "\n";
+                                                    *((yyval.nodeval)->code) += "- " + *mytemp + ", " + *((yyvsp[-2].nodeval)->value) + ", " + *((yyvsp[0].nodeval)->value) + "\n";
                                                     (yyval.nodeval)->value = mytemp;
                                                 }
-#line 1733 "y.tab.c" /* yacc.c:1646  */
+#line 1737 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 291 "minil.y" /* yacc.c:1646  */
+#line 295 "minil.y" /* yacc.c:1646  */
     {/*printf("Expr -> Expr MULT Term\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     (yyval.nodeval) = temp;
-                                                    string mytemp = makeTemp();
-                                                    (yyval.nodeval)->code = ". " + mytemp + "\n";
-                                                    (yyval.nodeval)->code += "* " + mytemp + ", " + (yyvsp[-2].nodeval)->value + ", " + (yyvsp[0].nodeval)->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    (yyval.nodeval)->code = new string(". " + *mytemp + "\n");
+                                                    *((yyval.nodeval)->code) += "* " + *mytemp + ", " + *((yyvsp[-2].nodeval)->value) + ", " + *((yyvsp[0].nodeval)->value) + "\n";
                                                     (yyval.nodeval)->value = mytemp;
                                                 }
-#line 1747 "y.tab.c" /* yacc.c:1646  */
+#line 1751 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 300 "minil.y" /* yacc.c:1646  */
+#line 304 "minil.y" /* yacc.c:1646  */
     {/*printf("Expr -> Expr DIV Term\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     (yyval.nodeval) = temp;
-                                                    string mytemp = makeTemp();
-                                                    (yyval.nodeval)->code = ". " + mytemp + "\n";
-                                                    (yyval.nodeval)->code += "/ " + mytemp + ", " + (yyvsp[-2].nodeval)->value + ", " + (yyvsp[0].nodeval)->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    (yyval.nodeval)->code = new string(". " + *mytemp + "\n");
+                                                    *((yyval.nodeval)->code) += "/ " + *mytemp + ", " + *((yyvsp[-2].nodeval)->value) + ", " + *((yyvsp[0].nodeval)->value) + "\n";
                                                     (yyval.nodeval)->value = mytemp; 
                                                 }
-#line 1761 "y.tab.c" /* yacc.c:1646  */
+#line 1765 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 309 "minil.y" /* yacc.c:1646  */
+#line 313 "minil.y" /* yacc.c:1646  */
     {/*printf("Expr -> Expr MOD Term\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     (yyval.nodeval) = temp;
-                                                    string mytemp = makeTemp();
-                                                    (yyval.nodeval)->code = (yyval.nodeval)->code + ". " + mytemp + "\n";
-                                                    (yyval.nodeval)->code += (yyval.nodeval)->code + "% " + mytemp + ", " + (yyvsp[-2].nodeval)->value + ", " + (yyvsp[0].nodeval)->value + "\n";
+                                                    string* mytemp = new string(makeTemp());
+                                                    (yyval.nodeval)->code = new string(". " + *mytemp + "\n");
+                                                    *((yyval.nodeval)->code) += "% " + *mytemp + ", " + *((yyvsp[-2].nodeval)->value) + ", " + *((yyvsp[0].nodeval)->value) + "\n";
                                                     (yyval.nodeval)->value = mytemp; 
                                                 }
-#line 1775 "y.tab.c" /* yacc.c:1646  */
+#line 1779 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 318 "minil.y" /* yacc.c:1646  */
+#line 322 "minil.y" /* yacc.c:1646  */
     {/*printf("Term -> IDENT %s L_PAREN ExpressionSeq R_PAREN\n", $1);*/}
-#line 1781 "y.tab.c" /* yacc.c:1646  */
+#line 1785 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 319 "minil.y" /* yacc.c:1646  */
+#line 323 "minil.y" /* yacc.c:1646  */
     {/*printf("Term -> Var\n");*/
                                                             Node* temp = new Node();
                                                             nodes.push_back(temp);
                                                             (yyval.nodeval) = temp;
-                                                            (yyval.nodeval)->value = string((yyvsp[0].strval));
+                                                            (yyval.nodeval)->value = new string((yyvsp[0].strval));
+                                                            (yyval.nodeval)->code = new string("");
                                                         }
-#line 1792 "y.tab.c" /* yacc.c:1646  */
+#line 1797 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 325 "minil.y" /* yacc.c:1646  */
+#line 330 "minil.y" /* yacc.c:1646  */
     {/*printf("Term -> Var\n");*/}
-#line 1798 "y.tab.c" /* yacc.c:1646  */
+#line 1803 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 326 "minil.y" /* yacc.c:1646  */
+#line 331 "minil.y" /* yacc.c:1646  */
     {/*printf("Term -> NUMBER %s\n", $1);*/
                                                             Node* temp = new Node();
                                                             nodes.push_back(temp);
                                                             (yyval.nodeval) = temp;
-                                                            (yyval.nodeval)->value = string((yyvsp[0].strval));
+                                                            (yyval.nodeval)->value = new string((yyvsp[0].strval));
+                                                            (yyval.nodeval)->code = new string("");
                                                         }
-#line 1809 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 39:
-#line 332 "minil.y" /* yacc.c:1646  */
-    {/*printf("Term -> L_PAREN Expression R_PAREN\n");*/}
 #line 1815 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 40:
-#line 333 "minil.y" /* yacc.c:1646  */
-    {/*printf("Term -> UMINUS Term\n");*/}
+  case 39:
+#line 338 "minil.y" /* yacc.c:1646  */
+    {/*printf("Term -> L_PAREN Expression R_PAREN\n");*/}
 #line 1821 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 41:
-#line 336 "minil.y" /* yacc.c:1646  */
-    {/*printf("ExpressionSeq -> epsilon\n");*/}
+  case 40:
+#line 339 "minil.y" /* yacc.c:1646  */
+    {/*printf("Term -> UMINUS Term\n");*/}
 #line 1827 "y.tab.c" /* yacc.c:1646  */
     break;
 
+  case 41:
+#line 342 "minil.y" /* yacc.c:1646  */
+    {/*printf("ExpressionSeq -> epsilon\n");*/}
+#line 1833 "y.tab.c" /* yacc.c:1646  */
+    break;
+
   case 42:
-#line 337 "minil.y" /* yacc.c:1646  */
+#line 343 "minil.y" /* yacc.c:1646  */
     {/*printf("ExpressionSeq -> ExpressionSeq1\n");*/
                                         Node* temp = new Node();
                                         nodes.push_back(temp);
                                         (yyval.nodeval) = temp;
-                                        (yyval.nodeval)->code = (yyvsp[0].nodeval)->code;
+                                        (yyval.nodeval)->code = new string(*((yyvsp[0].nodeval)->code));
                                     }
-#line 1838 "y.tab.c" /* yacc.c:1646  */
+#line 1844 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 345 "minil.y" /* yacc.c:1646  */
+#line 351 "minil.y" /* yacc.c:1646  */
     {/*printf("ExpressionSeq1 -> Expression\n");*/
                                                         Node* temp = new Node();
                                                         nodes.push_back(temp);
                                                         (yyval.nodeval) = temp;
-                                                        (yyval.nodeval)->code = (yyvsp[0].nodeval)->code;
+                                                        (yyval.nodeval)->code = new string(*((yyvsp[0].nodeval)->code));
                                                     }
-#line 1849 "y.tab.c" /* yacc.c:1646  */
+#line 1855 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 351 "minil.y" /* yacc.c:1646  */
+#line 357 "minil.y" /* yacc.c:1646  */
     {/*printf("ExpressionSeq1 -> ExpressionSeq1 COMMA Expression\n");*/
                                                         Node* temp = new Node();
                                                         nodes.push_back(temp);
                                                         (yyval.nodeval) = temp;
-                                                        (yyval.nodeval)->code = (yyvsp[-2].nodeval)->code + (yyvsp[0].nodeval)->code;
+                                                        (yyval.nodeval)->code = new string(*((yyvsp[-2].nodeval)->code) + *((yyvsp[0].nodeval)->code));
                                                     }
-#line 1860 "y.tab.c" /* yacc.c:1646  */
-    break;
-
-  case 45:
-#line 359 "minil.y" /* yacc.c:1646  */
-    {/*printf("Bool-Expr -> Bool-Expr OR Relation-And-Expr\n");*/}
 #line 1866 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 46:
-#line 360 "minil.y" /* yacc.c:1646  */
-    {/*printf("Relation-And-Expr -> Relation-And-Expr AND Relation-Expr\n");*/}
+  case 45:
+#line 365 "minil.y" /* yacc.c:1646  */
+    {/*printf("Bool-Expr -> Bool-Expr OR Relation-And-Expr\n");*/}
 #line 1872 "y.tab.c" /* yacc.c:1646  */
     break;
 
-  case 47:
-#line 361 "minil.y" /* yacc.c:1646  */
-    {/*printf("Relation-Expr -> Expression Comp Expression\n");*/}
+  case 46:
+#line 366 "minil.y" /* yacc.c:1646  */
+    {/*printf("Relation-And-Expr -> Relation-And-Expr AND Relation-Expr\n");*/}
 #line 1878 "y.tab.c" /* yacc.c:1646  */
     break;
 
+  case 47:
+#line 367 "minil.y" /* yacc.c:1646  */
+    {/*printf("Relation-Expr -> Expression Comp Expression\n");*/}
+#line 1884 "y.tab.c" /* yacc.c:1646  */
+    break;
+
   case 48:
-#line 362 "minil.y" /* yacc.c:1646  */
+#line 368 "minil.y" /* yacc.c:1646  */
     {/*printf("Relation-Expr -> TRUE\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     (yyval.nodeval) = temp;
-                                                    (yyval.nodeval)->value = "1";
+                                                    (yyval.nodeval)->value = new string("1");
+                                                    (yyval.nodeval)->code = new string("");
                                                 }
-#line 1889 "y.tab.c" /* yacc.c:1646  */
+#line 1896 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 49:
-#line 368 "minil.y" /* yacc.c:1646  */
+#line 375 "minil.y" /* yacc.c:1646  */
     {/*printf("Relation-Expr -> FALSE\n");*/
                                                     Node* temp = new Node();
                                                     nodes.push_back(temp);
                                                     (yyval.nodeval) = temp;
-                                                    (yyval.nodeval)-> value = "0";
+                                                    (yyval.nodeval)-> value = new string("0");
+                                                    (yyval.nodeval)->code = new string("");
                                                 }
-#line 1900 "y.tab.c" /* yacc.c:1646  */
+#line 1908 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 50:
-#line 374 "minil.y" /* yacc.c:1646  */
+#line 382 "minil.y" /* yacc.c:1646  */
     {/*printf("Relation-Expr -> L_PAREN Bool-Expr R_PAREN\n");*/}
-#line 1906 "y.tab.c" /* yacc.c:1646  */
+#line 1914 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 51:
-#line 375 "minil.y" /* yacc.c:1646  */
+#line 383 "minil.y" /* yacc.c:1646  */
     {/*printf("Relation-Expr -> NOT Relation-Expr\n");*/}
-#line 1912 "y.tab.c" /* yacc.c:1646  */
+#line 1920 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 52:
-#line 378 "minil.y" /* yacc.c:1646  */
+#line 386 "minil.y" /* yacc.c:1646  */
     {/*printf("Comp -> EQ\n");*/}
-#line 1918 "y.tab.c" /* yacc.c:1646  */
+#line 1926 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 53:
-#line 379 "minil.y" /* yacc.c:1646  */
+#line 387 "minil.y" /* yacc.c:1646  */
     {/*printf("Comp -> NEQ\n");*/}
-#line 1924 "y.tab.c" /* yacc.c:1646  */
+#line 1932 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 54:
-#line 380 "minil.y" /* yacc.c:1646  */
+#line 388 "minil.y" /* yacc.c:1646  */
     {/*printf("Comp -> LT\n");*/}
-#line 1930 "y.tab.c" /* yacc.c:1646  */
+#line 1938 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 55:
-#line 381 "minil.y" /* yacc.c:1646  */
+#line 389 "minil.y" /* yacc.c:1646  */
     {/*printf("Comp -> GT\n");*/}
-#line 1936 "y.tab.c" /* yacc.c:1646  */
+#line 1944 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 56:
-#line 382 "minil.y" /* yacc.c:1646  */
+#line 390 "minil.y" /* yacc.c:1646  */
     {/*printf("Comp -> LTE\n");*/}
-#line 1942 "y.tab.c" /* yacc.c:1646  */
+#line 1950 "y.tab.c" /* yacc.c:1646  */
     break;
 
   case 57:
-#line 383 "minil.y" /* yacc.c:1646  */
+#line 391 "minil.y" /* yacc.c:1646  */
     {/*printf("Comp -> GTE\n");*/}
-#line 1948 "y.tab.c" /* yacc.c:1646  */
+#line 1956 "y.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1952 "y.tab.c" /* yacc.c:1646  */
+#line 1960 "y.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -2176,7 +2184,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 386 "minil.y" /* yacc.c:1906  */
+#line 394 "minil.y" /* yacc.c:1906  */
 
 
 int main( int argc, char* argv[] ) {  
@@ -2201,6 +2209,7 @@ int main( int argc, char* argv[] ) {
     for(Node* n : nodes) {
         delete n;
     }
+    //string xxx = makeTemp();
 }
 
 
