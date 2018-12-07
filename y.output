@@ -100,11 +100,11 @@ WRITE (278) 25 26
 TRUE (279) 47
 FALSE (280) 48
 RETURN (281) 20
-IDENT (282) 3 8 9 10 11 12 21 22 23 24 25 26 27 28 34 35 36
-NUMBER (283) 10 37
-SEMICOLON (284) 3 5 6 7
-COLON (285) 8 10
-COMMA (286) 9 23 24 27 28 43
+IDENT <strval> (282) 3 8 9 10 11 12 21 22 23 24 25 26 27 28 34 35 36
+NUMBER <strval> (283) 10 37
+SEMICOLON <strval> (284) 3 5 6 7
+COLON <strval> (285) 8 10
+COMMA <strval> (286) 9 23 24 27 28 43
 ASSIGN (287) 11 12
 OR (288) 44
 AND (289) 45
@@ -135,26 +135,26 @@ Program (53)
     on left: 1 2, on right: 0 2
 Function (54)
     on left: 3, on right: 2
-DeclarationSeq (55)
+DeclarationSeq <nodeval> (55)
     on left: 4 5, on right: 3 5
-StatementSeq (56)
+StatementSeq <nodeval> (56)
     on left: 6 7, on right: 3 7 13 14 15 16
-Declaration (57)
+Declaration <nodeval> (57)
     on left: 8 9 10, on right: 5 9
-Statement (58)
+Statement <nodeval> (58)
     on left: 11 12 13 14 15 16 17 18 19 20, on right: 6 7
-ReadStmt (59)
+ReadStmt <nodeval> (59)
     on left: 21 22 23 24, on right: 17 23 24
-WriteStmt (60)
+WriteStmt <nodeval> (60)
     on left: 25 26 27 28, on right: 18 27 28
-Expression (61)
+Expression <nodeval> (61)
     on left: 29 30 31 32 33 34 35 36 37 38 39, on right: 11 12 20 22
     24 26 28 29 30 31 32 33 36 38 39 42 43 46
-ExpressionSeq (62)
+ExpressionSeq <nodeval> (62)
     on left: 40 41, on right: 34
-ExpressionSeq1 (63)
+ExpressionSeq1 <nodeval> (63)
     on left: 42 43, on right: 41 43
-Bool-Expr (64)
+Bool-Expr <nodeval> (64)
     on left: 44 45 46 47 48 49 50, on right: 13 14 15 16 44 45 49 50
 Comp (65)
     on left: 51 52 53 54 55 56, on right: 46

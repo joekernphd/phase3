@@ -6,15 +6,15 @@ beginlocals
     t : array [20] of integer;
 endlocals
 beginbody
-    read n;
-    m := 7 + n;
+    ##read n;
+    ##m := 7 + n;
     t[0] := 11 + m + 5;
-    write n;
-    write m;
-    if true then
-        write n;
-    else
-        write m;
-    endif;
+    ##write n;
+    ##write m;
+    ##if true then
+    ##    write n;
+    ##else
+    ##    write m;
+    ##endif;
     
 endbody

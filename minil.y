@@ -84,9 +84,11 @@ Program:    /*empty*/                       {/*printf("Program -> epsilon\n");*/
 
 Function:   FUNCTION IDENT SEMICOLON BEGIN_PARAMS DeclarationSeq END_PARAMS BEGIN_LOCALS DeclarationSeq END_LOCALS BEGIN_BODY StatementSeq END_BODY
                 {/*printf("Function -> FUNCTION IDENT %s SEMICOLON BEGIN_PARAMS DeclarationSeq END_PARAMS BEGIN_LOCALS DeclarationSeq END_LOCALS BEGIN_BODY StatementSeq END_BODY\n", $2);*/
+                    cerr << "pre" << endl;
                     code = "func " + string($2) + "\n";
                     if($5 != NULL)
                         code = code + *($5->code);
+                    cerr << "post" << endl;
                     if($8 != NULL)
                         code = code + *($8->code);
                     code = code + *($11->code);
