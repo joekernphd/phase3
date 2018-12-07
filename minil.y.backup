@@ -188,10 +188,35 @@ Statement:      IDENT ASSIGN Expression                             {/*printf("S
                                                                                     Node* temp = new Node();
                                                                                     nodes.push_back(temp);
                                                                                     $$ = temp;
-                                                                                    string mylabel = makeLabel();
-                                                                                    
+                                                                                    string iflabel = makeLabel();
+                                                                                    string elselabel = makeLabel();
+                                                                                    string endlabel = makeLabel();
+                                                                                    string mycode = "?:= " + iflabel + ", " + *($2->value) + "\n";
+                                                                                    mycode += ":= " + elselabel + "\n";
+                                                                                    mycode += ": " + iflabel + "\n";
+                                                                                    mycode += *($4->code);
+                                                                                    mycode += ":= " + endlabel + "\n";
+                                                                                    mycode += ": " + elselabel +"\n";
+                                                                                    mycode += *($6->code);
+                                                                                    mycode += ": " + endlabel + "\n";
+                                                                                    $$->code = new string(mycode);
                                                                                 }
-                | WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP    {/*printf("Statement -> WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP\n");*/}
+                | WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP    {/*printf("Statement -> WHILE Bool-Expr BEGINLOOP StatementSeq ENDLOOP\n");*/
+                                                                        Node* temp = new Node();
+                                                                        nodes.push_back(temp);
+                                                                        $$ = temp;
+                                                                        string startlabel = makeLabel();
+                                                                        string looplabel = makeLabel();
+                                                                        string endlabel = makeLabel();
+                                                                        string mycode = ": " + startlabel + "\n";
+                                                                        mycode += "?:= " + looplabel + *($2->value) + "\n";
+                                                                        mycode += ":= " + endlabel + "\n";
+                                                                        mycode += ": " + looplabel + "\n";
+                                                                        mycode += *($4->code);
+                                                                        mycode += ":= " + startlabel + "\n";
+                                                                        mycode += ": " + endlabel + "\n";
+                                                                        $$->code = new string(mycode);
+                                                                    }
                 | DO BEGINLOOP StatementSeq ENDLOOP WHILE Bool-Expr {/*printf("Statement -> DO BEGINLOOP StatementSeq ENDLOOP WHILE Bool-Expr\n");*/}
                 | ReadStmt                                          {/*printf("Statement -> ReadStmt\n");*/}
                 | WriteStmt                                         {/*printf("Statement -> WriteStmt\n");*/}

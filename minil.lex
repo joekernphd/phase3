@@ -7,6 +7,7 @@
     #include "header.h"
     int currLine = 1, currPos = 1;
 %}
+%option noyywrap
 
 digit		[0-9]
 letter		[a-zA-Z]
